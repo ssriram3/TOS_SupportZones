@@ -1,0 +1,64 @@
+# Previous Day and 5-Day High/Low Levels
+# For use on 1D 5min chart
+
+declare hide_on_daily;
+declare once_per_bar;
+
+# Get raw values
+def rawPrevDayHigh = high(period = AggregationPeriod.DAY)[1];
+def rawPrevDayLow = low(period = AggregationPeriod.DAY)[1];
+def rawPrevDayClose = close(period = AggregationPeriod.DAY)[1];
+
+# Filter out fat-finger trades (>30% deviation from close)
+def prevDayHigh = if AbsValue(rawPrevDayHigh - rawPrevDayClose) / rawPrevDayClose > 0.30 
+                  then high(period = AggregationPeriod.DAY)[2] 
+                  else rawPrevDayHigh;
+                  
+def prevDayLow = if AbsValue(rawPrevDayLow - rawPrevDayClose) / rawPrevDayClose > 0.30 
+                 then low(period = AggregationPeriod.DAY)[2] 
+                 else rawPrevDayLow;
+
+# 5-Day High and Low with filtering
+def rawFiveDayHigh = Highest(high(period = AggregationPeriod.DAY), 5)[1];
+def rawFiveDayLow = Lowest(low(period = AggregationPeriod.DAY), 5)[1];
+
+# Filter 5-day levels for anomalies
+def fiveDayHigh = if AbsValue(rawFiveDayHigh - rawPrevDayClose) / rawPrevDayClose > 0.30 
+                  then Highest(high(period = AggregationPeriod.DAY), 5)[2] 
+                  else rawFiveDayHigh;
+                  
+def fiveDayLow = if AbsValue(rawFiveDayLow - rawPrevDayClose) / rawPrevDayClose > 0.30 
+                 then Lowest(low(period = AggregationPeriod.DAY), 5)[2] 
+                 else rawFiveDayLow;
+
+# Plot Previous Day Levels
+plot PDH = prevDayHigh;
+PDH.SetDefaultColor(Color.CYAN);
+PDH.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+PDH.SetLineWeight(4);
+PDH.SetStyle(Curve.FIRM);
+
+plot PDL = prevDayLow;
+PDL.SetDefaultColor(Color.MAGENTA);
+PDL.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+PDL.SetLineWeight(4);
+PDL.SetStyle(Curve.FIRM);
+
+# Plot 5-Day Levels
+plot FDH = fiveDayHigh;
+FDH.SetDefaultColor(Color.YELLOW);
+FDH.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+FDH.SetLineWeight(4);
+FDH.SetStyle(Curve.LONG_DASH);
+
+plot FDL = fiveDayLow;
+FDL.SetDefaultColor(Color.ORANGE);
+FDL.SetPaintingStrategy(PaintingStrategy.HORIZONTAL);
+FDL.SetLineWeight(4);
+FDL.SetStyle(Curve.LONG_DASH);
+
+# Add Labels
+AddLabel(yes, "Prev Day High: " + prevDayHigh, Color.CYAN);
+AddLabel(yes, "Prev Day Low: " + prevDayLow, Color.MAGENTA);
+AddLabel(yes, "5D High: " + fiveDayHigh, Color.YELLOW);
+AddLabel(yes, "5D Low: " + fiveDayLow, Color.ORANGE);
